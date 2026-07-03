@@ -1,12 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import Alert from "@mui/material/Alert";
+import Autocomplete from "@mui/material/Autocomplete";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormGroup from "@mui/material/FormGroup";
 import FormHelperText from "@mui/material/FormHelperText";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
@@ -15,6 +13,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { Tenant } from "@/db/schema";
 import { LEASE_STATUSES, type FormState } from "@/lib/validation";
+
+type TenantRow = { key: number; tenantId: string | null };
 
 type Action = (
   prevState: FormState,
@@ -40,6 +40,31 @@ export function LeaseForm({
   const [state, formAction, pending] = useActionState(action, initialState);
   const errors = state.fieldErrors ?? {};
 
+  const [tenantRows, setTenantRows] = useState<TenantRow[]>([
+    { key: 0, tenantId: null },
+  ]);
+  const nextRowKey = useRef(1);
+  const selectedTenantIds = tenantRows.map((row) => row.tenantId);
+
+  function handleTenantChange(key: number, tenant: Tenant | null) {
+    setTenantRows((prev) =>
+      prev.map((row) =>
+        row.key === key ? { ...row, tenantId: tenant?.id ?? null } : row,
+      ),
+    );
+  }
+
+  function handleAddTenantRow() {
+    setTenantRows((prev) => [
+      ...prev,
+      { key: nextRowKey.current++, tenantId: null },
+    ]);
+  }
+
+  function handleRemoveTenantRow(key: number) {
+    setTenantRows((prev) => prev.filter((row) => row.key !== key));
+  }
+
   return (
     <form action={formAction}>
       <Stack spacing={2.5}>
@@ -52,28 +77,78 @@ export function LeaseForm({
             <Typography variant="overline" sx={sectionTitleSx}>
               Tenants
             </Typography>
-            <FormGroup>
-              {tenants.map((t) => (
-                <FormControlLabel
-                  key={t.id}
-                  control={<Checkbox name="tenantIds" value={t.id} />}
-                  label={
-                    <>
-                      {t.name}
-                      {t.email && (
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          sx={{ color: "var(--ink-faint)", ml: 0.5 }}
-                        >
-                          · {t.email}
-                        </Typography>
+            <Stack spacing={1.5}>
+              {tenantRows.map((row) => {
+                const selectedTenant =
+                  tenants.find((t) => t.id === row.tenantId) ?? null;
+                const options = tenants.filter(
+                  (t) =>
+                    t.id === row.tenantId || !selectedTenantIds.includes(t.id),
+                );
+                return (
+                  <Stack
+                    key={row.key}
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: "center" }}
+                  >
+                    <Autocomplete
+                      sx={{ flex: 1 }}
+                      options={options}
+                      value={selectedTenant}
+                      onChange={(_, tenant) =>
+                        handleTenantChange(row.key, tenant)
+                      }
+                      getOptionLabel={(t) => t.name}
+                      isOptionEqualToValue={(a, b) => a.id === b.id}
+                      renderOption={(props, t) => (
+                        <li {...props} key={t.id}>
+                          {t.name}
+                          {t.email && (
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              sx={{ color: "var(--ink-faint)", ml: 0.5 }}
+                            >
+                              · {t.email}
+                            </Typography>
+                          )}
+                        </li>
                       )}
-                    </>
-                  }
-                />
-              ))}
-            </FormGroup>
+                      renderInput={(params) => (
+                        <TextField {...params} label="Tenant" />
+                      )}
+                    />
+                    {row.tenantId && (
+                      <input
+                        type="hidden"
+                        name="tenantIds"
+                        value={row.tenantId}
+                      />
+                    )}
+                    {tenantRows.length > 1 && (
+                      <Button
+                        type="button"
+                        size="small"
+                        onClick={() => handleRemoveTenantRow(row.key)}
+                        aria-label="Remove tenant"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </Stack>
+                );
+              })}
+              <Button
+                type="button"
+                variant="outlined"
+                size="small"
+                onClick={handleAddTenantRow}
+                sx={{ alignSelf: "flex-start" }}
+              >
+                + Add tenant
+              </Button>
+            </Stack>
             {errors.tenantIds?.[0] && (
               <FormHelperText error>{errors.tenantIds[0]}</FormHelperText>
             )}
