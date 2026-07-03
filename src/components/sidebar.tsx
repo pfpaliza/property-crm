@@ -8,7 +8,6 @@ import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import Typography from "@mui/material/Typography";
 
 function GridIcon({ className }: { className?: string }) {
   return (
@@ -140,22 +139,7 @@ export function Sidebar() {
       </Box>
 
       <Box sx={{ flex: 1, px: 1.5 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            display: "block",
-            px: 1,
-            pb: 0.5,
-            pt: 1,
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.03em",
-            color: "var(--ink-faint)",
-          }}
-        >
-          Portfolio
-        </Typography>
-        <List disablePadding sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+        <List disablePadding sx={{ display: "flex", flexDirection: "column", gap: 0.25, mt: 1 }}>
           {nav.map(({ href, label, icon: Icon, match }) => {
             const active = match.test(pathname);
             return (
