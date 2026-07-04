@@ -1,15 +1,29 @@
 import { db } from "./index";
-import { properties, sessions } from "./schema";
-import { seedDemoData, sampleCount } from "./seed-data";
+import { properties, tenants, sessions } from "./schema";
+import { seedDemoData, sampleCount, tenantCount, leaseCount } from "./seed-data";
 
 const DEV_SESSION_ID = "00000000-0000-0000-0000-000000000001";
 
 async function main() {
   await db.insert(sessions).values({ id: DEV_SESSION_ID }).onConflictDoNothing();
 
+  // Clear demo data everywhere. Deleting properties cascades to leases and
+  // lease_tenants; tenants are session-scoped and cleared separately.
   await db.delete(properties);
-  await seedDemoData(DEV_SESSION_ID);
-  console.log(`Seeded ${sampleCount} properties for dev session ${DEV_SESSION_ID}.`);
+  await db.delete(tenants);
+
+  // Reseed *every* existing session, not just the dev one. Each browser gets
+  // its own session id via a cookie, so seeding only DEV_SESSION_ID would
+  // leave real visitors staring at an empty app after a reseed.
+  const allSessions = await db.select({ id: sessions.id }).from(sessions);
+  for (const session of allSessions) {
+    await seedDemoData(session.id);
+  }
+
+  console.log(
+    `Seeded ${sampleCount} properties, ${tenantCount} tenants, and ${leaseCount} leases ` +
+      `into ${allSessions.length} session(s).`,
+  );
   process.exit(0);
 }
 
