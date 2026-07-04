@@ -28,6 +28,8 @@ export default async function TenantDetailPage({
 
   if (!tenant) notFound();
 
+  const hasActiveLease = leases.some((l) => l.status === "active");
+
   return (
     <div>
       <Link href="/tenants" className="text-sm text-ink-muted hover:text-ink">
@@ -53,7 +55,11 @@ export default async function TenantDetailPage({
               Edit
             </Button>
           </Link>
-          <DeleteTenantButton id={tenant.id} name={tenant.name} />
+          <DeleteTenantButton
+            id={tenant.id}
+            name={tenant.name}
+            blocked={hasActiveLease}
+          />
         </div>
       </div>
 

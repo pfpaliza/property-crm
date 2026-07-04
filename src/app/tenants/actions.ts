@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { getSessionId } from "@/lib/session";
-import { tenants, type NewTenant } from "@/db/schema";
+import { leases, leaseTenants, tenants, type NewTenant } from "@/db/schema";
 import { tenantSchema, type FormState } from "@/lib/validation";
 
 function toRow(
@@ -70,8 +70,25 @@ export async function updateTenant(
   redirect(`/tenants/${id}`);
 }
 
-export async function deleteTenant(id: string): Promise<void> {
+export async function deleteTenant(
+  id: string,
+): Promise<{ error: string } | void> {
   const sessionId = await getSessionId();
+
+  // Refuse to delete while the tenant is on an active lease — the lease must
+  // be ended first so no active tenancy is silently discarded.
+  const activeLease = await db
+    .select({ id: leases.id })
+    .from(leaseTenants)
+    .innerJoin(leases, eq(leases.id, leaseTenants.leaseId))
+    .where(and(eq(leaseTenants.tenantId, id), eq(leases.status, "active")))
+    .limit(1);
+  if (activeLease.length > 0) {
+    return {
+      error: "Can't delete a tenant on an active lease. End the lease first.",
+    };
+  }
+
   await db
     .delete(tenants)
     .where(and(eq(tenants.id, id), eq(tenants.sessionId, sessionId)));
