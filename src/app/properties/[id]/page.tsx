@@ -77,6 +77,7 @@ export default async function PropertyDetailPage({
     leases.find((l) => l.status === "upcoming") ??
     null;
   const pastLeases = leases.filter((l) => l.id !== currentLease?.id);
+  const hasActiveLease = leases.some((l) => l.status === "active");
 
   return (
     <div>
@@ -108,7 +109,11 @@ export default async function PropertyDetailPage({
               Edit
             </Button>
           </Link>
-          <DeleteButton id={property.id} name={property.name} />
+          <DeleteButton
+            id={property.id}
+            name={property.name}
+            blocked={hasActiveLease}
+          />
         </div>
       </div>
 

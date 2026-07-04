@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { getSessionId } from "@/lib/session";
-import { properties, type NewProperty } from "@/db/schema";
+import { leases, properties, type NewProperty } from "@/db/schema";
 import { propertySchema, type FormState } from "@/lib/validation";
 
 // Maps validated input to DB column values. Drizzle `numeric` columns expect
@@ -82,8 +82,24 @@ export async function updateProperty(
   redirect(`/properties/${id}`);
 }
 
-export async function deleteProperty(id: string): Promise<void> {
+export async function deleteProperty(
+  id: string,
+): Promise<{ error: string } | void> {
   const sessionId = await getSessionId();
+
+  // Refuse to delete while an active lease is on the property — the lease
+  // must be ended first so no active tenancy is silently discarded.
+  const activeLease = await db
+    .select({ id: leases.id })
+    .from(leases)
+    .where(and(eq(leases.propertyId, id), eq(leases.status, "active")))
+    .limit(1);
+  if (activeLease.length > 0) {
+    return {
+      error: "Can't delete a property with an active lease. End the lease first.",
+    };
+  }
+
   await db
     .delete(properties)
     .where(and(eq(properties.id, id), eq(properties.sessionId, sessionId)));
