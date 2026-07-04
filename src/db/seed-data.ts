@@ -1,8 +1,24 @@
 import { db } from "./index";
-import { properties, type NewProperty } from "./schema";
+import {
+  properties,
+  tenants,
+  leases,
+  leaseTenants,
+  type NewProperty,
+  type NewTenant,
+  type NewLease,
+} from "./schema";
 
-const sample: Omit<NewProperty, "sessionId">[] = [
+type PropertySeed = Omit<NewProperty, "sessionId"> & { key: string };
+type TenantSeed = Omit<NewTenant, "sessionId"> & { key: string };
+type LeaseSeed = Omit<NewLease, "propertyId"> & {
+  propertyKey: string;
+  tenantKeys: string[];
+};
+
+const sampleProperties: PropertySeed[] = [
   {
+    key: "maple",
     name: "Maple Street Duplex",
     type: "multi_family",
     status: "occupied",
@@ -17,6 +33,7 @@ const sample: Omit<NewProperty, "sessionId">[] = [
     notes: "Both units leased through end of year.",
   },
   {
+    key: "loft",
     name: "Downtown Loft 3B",
     type: "condo",
     status: "vacant",
@@ -32,6 +49,7 @@ const sample: Omit<NewProperty, "sessionId">[] = [
     notes: "Turnover cleaning scheduled.",
   },
   {
+    key: "lakeview",
     name: "Lakeview Single Family",
     type: "single_family",
     status: "listed",
@@ -44,12 +62,267 @@ const sample: Omit<NewProperty, "sessionId">[] = [
     squareFeet: 1875,
     rentAmount: "2400.00",
   },
+  {
+    key: "cedar",
+    name: "Cedar Park Townhome",
+    type: "townhouse",
+    status: "occupied",
+    addressLine1: "1904 Brushy Creek Rd",
+    addressLine2: "Unit 12",
+    city: "Cedar Park",
+    state: "TX",
+    zip: "78613",
+    bedrooms: 3,
+    bathrooms: "2.5",
+    squareFeet: 1650,
+    rentAmount: "2250.00",
+    notes: "HOA covers landscaping and trash.",
+  },
+  {
+    key: "riverside",
+    name: "Riverside Apartments #204",
+    type: "apartment",
+    status: "occupied",
+    addressLine1: "550 E Riverside Dr",
+    addressLine2: "Apt 204",
+    city: "Austin",
+    state: "TX",
+    zip: "78741",
+    bedrooms: 2,
+    bathrooms: "1.0",
+    squareFeet: 980,
+    rentAmount: "1750.00",
+  },
+  {
+    key: "oakhill",
+    name: "Oak Hill Bungalow",
+    type: "single_family",
+    status: "occupied",
+    addressLine1: "7321 Patton Ranch Rd",
+    city: "Austin",
+    state: "TX",
+    zip: "78735",
+    bedrooms: 2,
+    bathrooms: "2.0",
+    squareFeet: 1420,
+    rentAmount: "2100.00",
+    notes: "Long-term tenant, renews annually.",
+  },
+  {
+    key: "commerce",
+    name: "Commerce St Retail",
+    type: "commercial",
+    status: "occupied",
+    addressLine1: "215 Commerce St",
+    city: "San Marcos",
+    state: "TX",
+    zip: "78666",
+    squareFeet: 3200,
+    rentAmount: "4800.00",
+    notes: "Ground-floor retail, triple-net lease.",
+  },
+  {
+    key: "sunset",
+    name: "Sunset Ridge Lot",
+    type: "land",
+    status: "active",
+    addressLine1: "0 Sunset Ridge Rd",
+    city: "Dripping Springs",
+    state: "TX",
+    zip: "78620",
+    notes: "Undeveloped 1.2-acre lot held for future build.",
+  },
+  {
+    key: "pecan",
+    name: "Pecan Grove Fourplex",
+    type: "multi_family",
+    status: "under_maintenance",
+    addressLine1: "1130 Pecan Grove Blvd",
+    city: "Pflugerville",
+    state: "TX",
+    zip: "78660",
+    bedrooms: 8,
+    bathrooms: "4.0",
+    squareFeet: 3600,
+    rentAmount: "5200.00",
+    notes: "Unit C undergoing plumbing repairs.",
+  },
 ];
 
-export const sampleCount = sample.length;
+const sampleTenants: TenantSeed[] = [
+  {
+    key: "chen",
+    name: "Sarah Chen",
+    email: "sarah.chen@example.com",
+    phone: "(512) 555-0142",
+  },
+  {
+    key: "johnson",
+    name: "Marcus Johnson",
+    email: "marcus.johnson@example.com",
+    phone: "(512) 555-0188",
+  },
+  {
+    key: "patel",
+    name: "Priya Patel",
+    email: "priya.patel@example.com",
+    phone: "(737) 555-0119",
+    notes: "Prefers email contact.",
+  },
+  {
+    key: "nguyen-d",
+    name: "David Nguyen",
+    email: "david.nguyen@example.com",
+    phone: "(512) 555-0203",
+  },
+  {
+    key: "nguyen-e",
+    name: "Emily Nguyen",
+    email: "emily.nguyen@example.com",
+    phone: "(512) 555-0204",
+  },
+  {
+    key: "okafor",
+    name: "Grace Okafor",
+    email: "grace.okafor@example.com",
+    phone: "(737) 555-0166",
+  },
+  {
+    key: "reyes",
+    name: "Luis Reyes",
+    email: "luis.reyes@example.com",
+    phone: "(830) 555-0177",
+    notes: "Business tenant — Reyes Coffee Co.",
+  },
+  {
+    key: "thompson",
+    name: "Hannah Thompson",
+    email: "hannah.thompson@example.com",
+    phone: "(512) 555-0155",
+  },
+];
 
-// Populates a freshly created session with sample properties so guests land
-// on a populated dashboard instead of an empty state.
+const sampleLeases: LeaseSeed[] = [
+  {
+    propertyKey: "maple",
+    tenantKeys: ["chen"],
+    status: "active",
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    rentAmount: "1450.00",
+    depositAmount: "1450.00",
+    notes: "Unit A.",
+  },
+  {
+    propertyKey: "maple",
+    tenantKeys: ["johnson"],
+    status: "active",
+    startDate: "2026-03-01",
+    endDate: "2027-02-28",
+    rentAmount: "1400.00",
+    depositAmount: "1400.00",
+    notes: "Unit B.",
+  },
+  {
+    propertyKey: "cedar",
+    tenantKeys: ["nguyen-d", "nguyen-e"],
+    status: "active",
+    startDate: "2025-09-01",
+    endDate: "2026-08-31",
+    rentAmount: "2250.00",
+    depositAmount: "2250.00",
+  },
+  {
+    propertyKey: "riverside",
+    tenantKeys: ["patel"],
+    status: "active",
+    startDate: "2026-05-15",
+    endDate: "2027-05-14",
+    rentAmount: "1750.00",
+    depositAmount: "1750.00",
+  },
+  {
+    propertyKey: "oakhill",
+    tenantKeys: ["thompson"],
+    status: "active",
+    startDate: "2026-02-01",
+    endDate: "2027-01-31",
+    rentAmount: "2100.00",
+    depositAmount: "2100.00",
+  },
+  {
+    propertyKey: "commerce",
+    tenantKeys: ["reyes"],
+    status: "active",
+    startDate: "2024-06-01",
+    endDate: "2029-05-31",
+    rentAmount: "4800.00",
+    depositAmount: "9600.00",
+    notes: "5-year triple-net commercial lease.",
+  },
+  {
+    // Prior tenant of the Oak Hill bungalow, moved out.
+    propertyKey: "oakhill",
+    tenantKeys: ["okafor"],
+    status: "ended",
+    startDate: "2025-01-01",
+    endDate: "2026-01-15",
+    rentAmount: "1950.00",
+    depositAmount: "1950.00",
+  },
+  {
+    // Upcoming lease for the loft that is currently being turned over.
+    propertyKey: "loft",
+    tenantKeys: ["okafor"],
+    status: "upcoming",
+    startDate: "2026-08-01",
+    endDate: "2027-07-31",
+    rentAmount: "1950.00",
+    depositAmount: "1950.00",
+    notes: "Move-in after turnover cleaning.",
+  },
+];
+
+export const sampleCount = sampleProperties.length;
+export const tenantCount = sampleTenants.length;
+export const leaseCount = sampleLeases.length;
+
+// Populates a freshly created session with sample properties, tenants, and
+// leases so guests land on a populated dashboard instead of an empty state.
 export async function seedDemoData(sessionId: string) {
-  await db.insert(properties).values(sample.map((p) => ({ ...p, sessionId })));
+  const insertedProperties = await db
+    .insert(properties)
+    .values(sampleProperties.map(({ key, ...p }) => ({ ...p, sessionId })))
+    .returning({ id: properties.id });
+
+  const propertyIdByKey = new Map(
+    sampleProperties.map((p, i) => [p.key, insertedProperties[i].id]),
+  );
+
+  const insertedTenants = await db
+    .insert(tenants)
+    .values(sampleTenants.map(({ key, ...t }) => ({ ...t, sessionId })))
+    .returning({ id: tenants.id });
+
+  const tenantIdByKey = new Map(
+    sampleTenants.map((t, i) => [t.key, insertedTenants[i].id]),
+  );
+
+  const insertedLeases = await db
+    .insert(leases)
+    .values(
+      sampleLeases.map(({ propertyKey, tenantKeys, ...l }) => ({
+        ...l,
+        propertyId: propertyIdByKey.get(propertyKey)!,
+      })),
+    )
+    .returning({ id: leases.id });
+
+  const links = sampleLeases.flatMap((lease, i) =>
+    lease.tenantKeys.map((tenantKey) => ({
+      leaseId: insertedLeases[i].id,
+      tenantId: tenantIdByKey.get(tenantKey)!,
+    })),
+  );
+  await db.insert(leaseTenants).values(links);
 }
