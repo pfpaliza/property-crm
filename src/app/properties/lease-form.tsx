@@ -5,9 +5,9 @@ import Link from "next/link";
 import Alert from "@mui/material/Alert";
 import Autocomplete from "@mui/material/Autocomplete";
 import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
 import FormHelperText from "@mui/material/FormHelperText";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -72,170 +72,168 @@ export function LeaseForm({
           <Alert severity="error">{state.message}</Alert>
         )}
 
-        <Paper component="section" variant="outlined" sx={{ p: 3 }}>
+        <Stack component="section" spacing={1.5}>
+          <Typography variant="overline" sx={sectionTitleSx}>
+            Tenants
+          </Typography>
           <Stack spacing={1.5}>
-            <Typography variant="overline" sx={sectionTitleSx}>
-              Tenants
-            </Typography>
-            <Stack spacing={1.5}>
-              {tenantRows.map((row) => {
-                const selectedTenant =
-                  tenants.find((t) => t.id === row.tenantId) ?? null;
-                const options = tenants.filter(
-                  (t) =>
-                    t.id === row.tenantId || !selectedTenantIds.includes(t.id),
-                );
-                return (
-                  <Stack
-                    key={row.key}
-                    direction="row"
-                    spacing={1}
-                    sx={{ alignItems: "center" }}
-                  >
-                    <Autocomplete
-                      sx={{ flex: 1 }}
-                      options={options}
-                      value={selectedTenant}
-                      onChange={(_, tenant) =>
-                        handleTenantChange(row.key, tenant)
-                      }
-                      getOptionLabel={(t) => t.name}
-                      isOptionEqualToValue={(a, b) => a.id === b.id}
-                      renderOption={(props, t) => (
-                        <li {...props} key={t.id}>
-                          {t.name}
-                          {t.email && (
-                            <Typography
-                              component="span"
-                              variant="body2"
-                              sx={{ color: "var(--ink-faint)", ml: 0.5 }}
-                            >
-                              · {t.email}
-                            </Typography>
-                          )}
-                        </li>
-                      )}
-                      renderInput={(params) => (
-                        <TextField {...params} label="Tenant" />
-                      )}
+            {tenantRows.map((row) => {
+              const selectedTenant =
+                tenants.find((t) => t.id === row.tenantId) ?? null;
+              const options = tenants.filter(
+                (t) =>
+                  t.id === row.tenantId || !selectedTenantIds.includes(t.id),
+              );
+              return (
+                <Stack
+                  key={row.key}
+                  direction="row"
+                  spacing={1}
+                  sx={{ alignItems: "center" }}
+                >
+                  <Autocomplete
+                    sx={{ flex: 1 }}
+                    options={options}
+                    value={selectedTenant}
+                    onChange={(_, tenant) =>
+                      handleTenantChange(row.key, tenant)
+                    }
+                    getOptionLabel={(t) => t.name}
+                    isOptionEqualToValue={(a, b) => a.id === b.id}
+                    renderOption={(props, t) => (
+                      <li {...props} key={t.id}>
+                        {t.name}
+                        {t.email && (
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            sx={{ color: "var(--ink-faint)", ml: 0.5 }}
+                          >
+                            · {t.email}
+                          </Typography>
+                        )}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Tenant" />
+                    )}
+                  />
+                  {row.tenantId && (
+                    <input
+                      type="hidden"
+                      name="tenantIds"
+                      value={row.tenantId}
                     />
-                    {row.tenantId && (
-                      <input
-                        type="hidden"
-                        name="tenantIds"
-                        value={row.tenantId}
-                      />
-                    )}
-                    {tenantRows.length > 1 && (
-                      <Button
-                        type="button"
-                        size="small"
-                        onClick={() => handleRemoveTenantRow(row.key)}
-                        aria-label="Remove tenant"
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </Stack>
-                );
-              })}
-              <Button
-                type="button"
-                variant="outlined"
-                size="small"
-                onClick={handleAddTenantRow}
-                sx={{ alignSelf: "flex-start" }}
-              >
-                + Add tenant
-              </Button>
-            </Stack>
-            {errors.tenantIds?.[0] && (
-              <FormHelperText error>{errors.tenantIds[0]}</FormHelperText>
-            )}
-          </Stack>
-        </Paper>
-
-        <Paper component="section" variant="outlined" sx={{ p: 3 }}>
-          <Stack spacing={2.5}>
-            <Typography variant="overline" sx={sectionTitleSx}>
-              Terms
-            </Typography>
-
-            <TextField
-              id="status"
-              name="status"
-              label="Status"
-              select
-              defaultValue="active"
-              error={!!errors.status}
-              helperText={errors.status?.[0]}
-              fullWidth
+                  )}
+                  {tenantRows.length > 1 && (
+                    <Button
+                      type="button"
+                      size="small"
+                      onClick={() => handleRemoveTenantRow(row.key)}
+                      aria-label="Remove tenant"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </Stack>
+              );
+            })}
+            <Button
+              type="button"
+              variant="outlined"
+              size="small"
+              onClick={handleAddTenantRow}
+              sx={{ alignSelf: "flex-start" }}
             >
-              {Object.entries(LEASE_STATUSES).map(([value, label]) => (
-                <MenuItem key={value} value={value}>
-                  {label}
-                </MenuItem>
-              ))}
-            </TextField>
+              + Add tenant
+            </Button>
+          </Stack>
+          {errors.tenantIds?.[0] && (
+            <FormHelperText error>{errors.tenantIds[0]}</FormHelperText>
+          )}
+        </Stack>
 
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                id="startDate"
-                name="startDate"
-                label="Start date"
-                type="date"
-                error={!!errors.startDate}
-                helperText={errors.startDate?.[0]}
-                slotProps={{ inputLabel: { shrink: true } }}
-                fullWidth
-              />
-              <TextField
-                id="endDate"
-                name="endDate"
-                label="End date (optional)"
-                type="date"
-                error={!!errors.endDate}
-                helperText={errors.endDate?.[0]}
-                slotProps={{ inputLabel: { shrink: true } }}
-                fullWidth
-              />
-            </Stack>
+        <Divider sx={{ borderColor: "var(--border)" }} />
 
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                id="rentAmount"
-                name="rentAmount"
-                label="Rent / mo"
-                type="number"
-                slotProps={{ htmlInput: { min: 0, step: 1 } }}
-                error={!!errors.rentAmount}
-                helperText={errors.rentAmount?.[0]}
-                fullWidth
-              />
-              <TextField
-                id="depositAmount"
-                name="depositAmount"
-                label="Deposit"
-                type="number"
-                slotProps={{ htmlInput: { min: 0, step: 1 } }}
-                error={!!errors.depositAmount}
-                helperText={errors.depositAmount?.[0]}
-                fullWidth
-              />
-            </Stack>
+        <Stack component="section" spacing={2.5}>
+          <Typography variant="overline" sx={sectionTitleSx}>
+            Terms
+          </Typography>
 
+          <TextField
+            id="status"
+            name="status"
+            label="Status"
+            select
+            defaultValue="active"
+            error={!!errors.status}
+            helperText={errors.status?.[0]}
+            fullWidth
+          >
+            {Object.entries(LEASE_STATUSES).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
-              id="notes"
-              name="notes"
-              label="Notes (optional)"
-              multiline
-              rows={3}
-              error={!!errors.notes}
-              helperText={errors.notes?.[0]}
+              id="startDate"
+              name="startDate"
+              label="Start date"
+              type="date"
+              error={!!errors.startDate}
+              helperText={errors.startDate?.[0]}
+              slotProps={{ inputLabel: { shrink: true } }}
+              fullWidth
+            />
+            <TextField
+              id="endDate"
+              name="endDate"
+              label="End date (optional)"
+              type="date"
+              error={!!errors.endDate}
+              helperText={errors.endDate?.[0]}
+              slotProps={{ inputLabel: { shrink: true } }}
               fullWidth
             />
           </Stack>
-        </Paper>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              id="rentAmount"
+              name="rentAmount"
+              label="Rent / mo"
+              type="number"
+              slotProps={{ htmlInput: { min: 0, step: 1 } }}
+              error={!!errors.rentAmount}
+              helperText={errors.rentAmount?.[0]}
+              fullWidth
+            />
+            <TextField
+              id="depositAmount"
+              name="depositAmount"
+              label="Deposit"
+              type="number"
+              slotProps={{ htmlInput: { min: 0, step: 1 } }}
+              error={!!errors.depositAmount}
+              helperText={errors.depositAmount?.[0]}
+              fullWidth
+            />
+          </Stack>
+
+          <TextField
+            id="notes"
+            name="notes"
+            label="Notes (optional)"
+            multiline
+            rows={3}
+            error={!!errors.notes}
+            helperText={errors.notes?.[0]}
+            fullWidth
+          />
+        </Stack>
 
         <Stack direction="row" spacing={1.5}>
           <Button type="submit" variant="contained" loading={pending}>
