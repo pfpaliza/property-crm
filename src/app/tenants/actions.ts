@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { getSessionId } from "@/lib/session";
 import { leases, leaseTenants, tenants, type NewTenant } from "@/db/schema";
 import { tenantSchema, type FormState } from "@/lib/validation";
+import { withToast } from "@/lib/toast";
 
 function toRow(
   input: ReturnType<typeof tenantSchema.parse>,
@@ -42,7 +43,7 @@ export async function createTenant(
 
   revalidatePath("/");
   revalidatePath("/tenants");
-  redirect("/tenants");
+  redirect(withToast("/tenants", "Tenant created"));
 }
 
 export async function updateTenant(
@@ -67,7 +68,7 @@ export async function updateTenant(
 
   revalidatePath("/tenants");
   revalidatePath(`/tenants/${id}`);
-  redirect(`/tenants/${id}`);
+  redirect(withToast(`/tenants/${id}`, "Tenant updated"));
 }
 
 export async function deleteTenant(
@@ -94,5 +95,5 @@ export async function deleteTenant(
     .where(and(eq(tenants.id, id), eq(tenants.sessionId, sessionId)));
   revalidatePath("/");
   revalidatePath("/tenants");
-  redirect("/tenants");
+  redirect(withToast("/tenants", "Tenant deleted"));
 }

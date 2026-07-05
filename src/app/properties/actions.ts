@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { getSessionId } from "@/lib/session";
 import { leases, properties, type NewProperty } from "@/db/schema";
 import { propertySchema, type FormState } from "@/lib/validation";
+import { withToast } from "@/lib/toast";
 
 // Maps validated input to DB column values. Drizzle `numeric` columns expect
 // strings, while `integer` columns take numbers; both are nullable.
@@ -53,7 +54,7 @@ export async function createProperty(
 
   revalidatePath("/");
   revalidatePath("/properties");
-  redirect("/properties");
+  redirect(withToast("/properties", "Property created"));
 }
 
 export async function updateProperty(
@@ -79,7 +80,7 @@ export async function updateProperty(
   revalidatePath("/");
   revalidatePath("/properties");
   revalidatePath(`/properties/${id}`);
-  redirect(`/properties/${id}`);
+  redirect(withToast(`/properties/${id}`, "Property updated"));
 }
 
 export async function deleteProperty(
@@ -105,5 +106,5 @@ export async function deleteProperty(
     .where(and(eq(properties.id, id), eq(properties.sessionId, sessionId)));
   revalidatePath("/");
   revalidatePath("/properties");
-  redirect("/properties");
+  redirect(withToast("/properties", "Property deleted"));
 }

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
+import { SuccessToast } from "@/components/success-toast";
 import { MuiThemeRegistry } from "@/components/mui-theme-registry";
 import { getSession } from "@/lib/session";
 import { formatDateTime } from "@/lib/format";
@@ -34,6 +36,9 @@ export default async function RootLayout({
     >
       <body className="min-h-full">
         <MuiThemeRegistry>
+          <Suspense fallback={null}>
+            <SuccessToast />
+          </Suspense>
           <div className="flex min-h-screen">
             <Sidebar sessionStartedAt={formatDateTime(session.createdAt)} />
             <div className="flex-1 overflow-x-hidden">

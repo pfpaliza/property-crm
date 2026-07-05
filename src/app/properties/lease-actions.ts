@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { leases, leaseTenants, type NewLease } from "@/db/schema";
 import { leaseSchema, type FormState } from "@/lib/validation";
+import { withToast } from "@/lib/toast";
 
 function toRow(input: ReturnType<typeof leaseSchema.parse>): Omit<NewLease, "propertyId"> {
   return {
@@ -59,7 +60,7 @@ export async function createLease(
   revalidatePath("/");
   revalidatePath(`/properties/${propertyId}`);
   revalidatePath("/leases");
-  redirect(`/properties/${propertyId}`);
+  redirect(withToast(`/properties/${propertyId}`, "Lease created"));
 }
 
 export async function endLease(id: string, propertyId: string): Promise<void> {
