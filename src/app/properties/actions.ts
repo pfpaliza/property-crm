@@ -22,6 +22,7 @@ function parseUnitRows(
   const ids = formData.getAll("unitId") as string[];
   const labels = formData.getAll("unitLabel") as string[];
   const rows: UnitRow[] = [];
+  const seen = new Set<string>();
 
   for (let i = 0; i < labels.length; i++) {
     const raw = labels[i] ?? "";
@@ -30,6 +31,11 @@ function parseUnitRows(
     if (!parsed.success) {
       return { error: parsed.error.issues[0]?.message ?? "Invalid unit name" };
     }
+    const key = parsed.data.toLowerCase();
+    if (seen.has(key)) {
+      return { error: `Unit names must be unique — "${parsed.data}" is repeated.` };
+    }
+    seen.add(key);
     const id = ids[i]?.trim() ? ids[i] : null;
     rows.push({ id, label: parsed.data });
   }
