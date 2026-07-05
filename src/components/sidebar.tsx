@@ -10,6 +10,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Avatar from "@mui/material/Avatar";
 import Typography from "@mui/material/Typography";
+import { LocalTime } from "@/components/local-time";
 
 function GridIcon({ className }: { className?: string }) {
   return (
@@ -115,6 +116,8 @@ const nav = [
   { href: "/leases", label: "Leases", icon: LeaseIcon, match: /^\/leases/ },
 ];
 
+// `sessionStartedAt` is an ISO 8601 string; it renders in the viewer's local
+// time via <LocalTime>.
 export function Sidebar({ sessionStartedAt }: { sessionStartedAt: string }) {
   const pathname = usePathname();
 
@@ -217,7 +220,7 @@ export function Sidebar({ sessionStartedAt }: { sessionStartedAt: string }) {
               noWrap
               sx={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}
             >
-              Started {sessionStartedAt}
+              Started <LocalTime iso={sessionStartedAt} mode="datetime" />
             </Typography>
           </Box>
         </Box>
