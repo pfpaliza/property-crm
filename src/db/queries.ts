@@ -196,6 +196,21 @@ export type LeaseWithPropertyAndTenants = Lease & {
   tenants: Tenant[];
 };
 
+export async function getLease(id: string): Promise<LeaseWithPropertyAndTenants | null> {
+  const sessionId = await getSessionId();
+  const rows = await db
+    .select({ lease: leases, property: properties })
+    .from(leases)
+    .innerJoin(properties, eq(leases.propertyId, properties.id))
+    .where(and(eq(leases.id, id), eq(properties.sessionId, sessionId)))
+    .limit(1);
+
+  if (rows.length === 0) return null;
+
+  const [withTenants] = await attachTenants([rows[0].lease]);
+  return { ...withTenants, property: rows[0].property };
+}
+
 export async function getAllLeases(): Promise<LeaseWithPropertyAndTenants[]> {
   const sessionId = await getSessionId();
   const rows = await db
