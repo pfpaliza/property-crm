@@ -11,12 +11,8 @@ import {
 import { StatusBadge } from "@/components/badge";
 import { Avatar } from "@/components/avatar";
 import { PROPERTY_TYPES } from "@/lib/validation";
-import {
-  formatAddressLine,
-  formatCityLine,
-  formatDate,
-  formatMoney,
-} from "@/lib/format";
+import { formatAddressLine, formatCityLine, formatMoney } from "@/lib/format";
+import { LocalTime } from "@/components/local-time";
 import { DeleteButton } from "../delete-button";
 import { MarkSoldButton } from "../mark-sold-button";
 import { UnitsTable } from "./units-table";
@@ -177,8 +173,9 @@ export default async function PropertyDetailPage({
       )}
 
       <p className="mt-6 text-xs text-ink-faint">
-        Added {formatDate(property.createdAt)} · Updated{" "}
-        {formatDate(property.updatedAt)}
+        Added <LocalTime iso={property.createdAt.toISOString()} mode="date" /> ·
+        Updated{" "}
+        <LocalTime iso={property.updatedAt.toISOString()} mode="date" />
       </p>
     </div>
   );

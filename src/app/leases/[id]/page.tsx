@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { getLease } from "@/db/queries";
 import { LeaseStatusBadge } from "@/components/badge";
 import { formatAddressLine, formatCityLine, formatDate, formatMoney } from "@/lib/format";
+import { LocalTime } from "@/components/local-time";
 import { EndLeaseButton } from "../../properties/end-lease-button";
 
 export const dynamic = "force-dynamic";
@@ -123,7 +124,8 @@ export default async function LeaseDetailPage({
       )}
 
       <p className="mt-6 text-xs text-ink-faint">
-        Added {formatDate(lease.createdAt)} · Updated {formatDate(lease.updatedAt)}
+        Added <LocalTime iso={lease.createdAt.toISOString()} mode="date" /> ·{" "}
+        Updated <LocalTime iso={lease.updatedAt.toISOString()} mode="date" />
       </p>
     </div>
   );

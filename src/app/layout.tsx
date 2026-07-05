@@ -4,7 +4,6 @@ import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { MuiThemeRegistry } from "@/components/mui-theme-registry";
 import { getSession } from "@/lib/session";
-import { formatDateTime } from "@/lib/format";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +34,7 @@ export default async function RootLayout({
       <body className="min-h-full">
         <MuiThemeRegistry>
           <div className="flex min-h-screen">
-            <Sidebar sessionStartedAt={formatDateTime(session.createdAt)} />
+            <Sidebar sessionStartedAt={session.createdAt.toISOString()} />
             <div className="flex-1 overflow-x-hidden">
               <main className="mx-auto w-full max-w-5xl px-8 py-8">
                 {children}
