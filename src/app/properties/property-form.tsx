@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { Property } from "@/db/schema";
 import { successButtonSx } from "@/components/success-button-sx";
+import { CheckIcon } from "@/components/check-icon";
 import {
   PROPERTY_STATUSES,
   PROPERTY_TYPES,
@@ -275,6 +276,7 @@ export function PropertyForm({
             loading={pending}
             disabled={saved}
             sx={saved ? successButtonSx : undefined}
+            startIcon={saved ? <CheckIcon /> : undefined}
           >
             {saved ? "Saved" : pending ? "Saving…" : submitLabel}
           </Button>

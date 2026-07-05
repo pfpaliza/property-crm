@@ -14,6 +14,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { Tenant } from "@/db/schema";
 import { PlusIcon } from "@/components/plus-icon";
+import { CheckIcon } from "@/components/check-icon";
 import { successButtonSx } from "@/components/success-button-sx";
 import { LEASE_STATUSES, type FormState } from "@/lib/validation";
 
@@ -278,6 +279,7 @@ export function LeaseForm({
             loading={pending}
             disabled={saved}
             sx={saved ? successButtonSx : undefined}
+            startIcon={saved ? <CheckIcon /> : undefined}
           >
             {saved ? "Saved" : pending ? "Saving…" : "Start lease"}
           </Button>
