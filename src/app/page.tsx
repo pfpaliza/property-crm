@@ -62,7 +62,7 @@ function ListCard({
   const hasMore = rows.length > LIST_CARD_MAX_ROWS;
 
   return (
-    <Paper variant="outlined">
+    <Paper variant="outlined" className="flex h-full flex-col">
       <div
         className="flex items-center justify-between px-4 py-3"
         style={{ borderBottom: "1px solid var(--border)" }}
@@ -89,7 +89,11 @@ function ListCard({
           {visibleRows.map((row, i) => (
             <li
               key={row.href + i}
-              style={{ borderBottom: "1px solid var(--border)" }}
+              style={
+                i < visibleRows.length - 1
+                  ? { borderBottom: "1px solid var(--border)" }
+                  : undefined
+              }
             >
               <Link
                 href={row.href}
@@ -114,7 +118,8 @@ function ListCard({
       {visibleRows.length > 0 && (
         <Link
           href={seeMoreHref}
-          className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-[var(--surface-muted)]"
+          className="mt-auto flex items-center justify-center px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-[var(--surface-muted)]"
+          style={{ borderTop: "1px solid var(--border)" }}
         >
           {hasMore ? `See all ${count} →` : "View all →"}
         </Link>
