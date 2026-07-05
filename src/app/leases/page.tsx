@@ -16,7 +16,7 @@ const columns: Column<LeaseWithPropertyAndTenants>[] = [
     sortable: true,
     render: (lease) => (
       <Link
-        href={`/properties/${lease.property.id}`}
+        href={`/leases/${lease.id}`}
         className="block truncate font-medium after:absolute after:inset-0 after:content-['']"
       >
         {lease.property.name}
