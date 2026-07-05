@@ -33,6 +33,16 @@ export async function createProperty(page: Page, name: string): Promise<void> {
 // returning once the detail heading is showing.
 export async function openProperty(page: Page, name: string): Promise<void> {
   await page.getByPlaceholder("Search properties…").fill(name);
+
+  // The search box filters the list on a debounce by pushing a ?q= navigation.
+  // Wait for that navigation to land before clicking the result: the row link
+  // also exists in the unfiltered list, so clicking too early starts the
+  // detail navigation only for the pending ?q= navigation to cancel it, leaving
+  // us back on the list with no heading (the flaky failure this guards against).
+  await page.waitForURL((url) => url.searchParams.get("q") === name);
   await page.getByRole("link", { name }).click();
+
+  // Confirm we actually reached a detail page before asserting on its heading.
+  await expect(page).toHaveURL(/\/properties\/[^/]+$/);
   await expect(page.getByRole("heading", { name })).toBeVisible();
 }
