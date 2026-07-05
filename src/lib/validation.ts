@@ -30,6 +30,64 @@ export const PROPERTY_STATUSES: Record<
   listed: "Listed",
 };
 
+// US states (plus DC) offered by the property form's state autocomplete. The
+// two-letter `code` is what gets stored; the schema below validates against it.
+export const US_STATES: { code: string; name: string }[] = [
+  { code: "AL", name: "Alabama" },
+  { code: "AK", name: "Alaska" },
+  { code: "AZ", name: "Arizona" },
+  { code: "AR", name: "Arkansas" },
+  { code: "CA", name: "California" },
+  { code: "CO", name: "Colorado" },
+  { code: "CT", name: "Connecticut" },
+  { code: "DE", name: "Delaware" },
+  { code: "DC", name: "District of Columbia" },
+  { code: "FL", name: "Florida" },
+  { code: "GA", name: "Georgia" },
+  { code: "HI", name: "Hawaii" },
+  { code: "ID", name: "Idaho" },
+  { code: "IL", name: "Illinois" },
+  { code: "IN", name: "Indiana" },
+  { code: "IA", name: "Iowa" },
+  { code: "KS", name: "Kansas" },
+  { code: "KY", name: "Kentucky" },
+  { code: "LA", name: "Louisiana" },
+  { code: "ME", name: "Maine" },
+  { code: "MD", name: "Maryland" },
+  { code: "MA", name: "Massachusetts" },
+  { code: "MI", name: "Michigan" },
+  { code: "MN", name: "Minnesota" },
+  { code: "MS", name: "Mississippi" },
+  { code: "MO", name: "Missouri" },
+  { code: "MT", name: "Montana" },
+  { code: "NE", name: "Nebraska" },
+  { code: "NV", name: "Nevada" },
+  { code: "NH", name: "New Hampshire" },
+  { code: "NJ", name: "New Jersey" },
+  { code: "NM", name: "New Mexico" },
+  { code: "NY", name: "New York" },
+  { code: "NC", name: "North Carolina" },
+  { code: "ND", name: "North Dakota" },
+  { code: "OH", name: "Ohio" },
+  { code: "OK", name: "Oklahoma" },
+  { code: "OR", name: "Oregon" },
+  { code: "PA", name: "Pennsylvania" },
+  { code: "RI", name: "Rhode Island" },
+  { code: "SC", name: "South Carolina" },
+  { code: "SD", name: "South Dakota" },
+  { code: "TN", name: "Tennessee" },
+  { code: "TX", name: "Texas" },
+  { code: "UT", name: "Utah" },
+  { code: "VT", name: "Vermont" },
+  { code: "VA", name: "Virginia" },
+  { code: "WA", name: "Washington" },
+  { code: "WV", name: "West Virginia" },
+  { code: "WI", name: "Wisconsin" },
+  { code: "WY", name: "Wyoming" },
+];
+
+const US_STATE_CODES = new Set(US_STATES.map((s) => s.code));
+
 // Turns "" into undefined so optional numeric/text fields from a form clear out
 // instead of failing validation.
 const emptyToUndefined = (v: unknown) =>
@@ -63,8 +121,16 @@ export const propertySchema = z.object({
   addressLine1: z.string().trim().min(1, "Address is required").max(200),
   addressLine2: optionalText,
   city: z.string().trim().min(1, "City is required").max(120),
-  state: z.string().trim().min(1, "State is required").max(60),
-  zip: z.string().trim().min(1, "ZIP is required").max(20),
+  state: z
+    .string()
+    .trim()
+    .min(1, "State is required")
+    .refine((v) => US_STATE_CODES.has(v), "Select a state from the list"),
+  zip: z
+    .string()
+    .trim()
+    .min(1, "ZIP is required")
+    .regex(/^\d{5}$/, "ZIP must be a 5-digit number"),
 
   bedrooms: optionalInt,
   bathrooms: optionalDecimal,

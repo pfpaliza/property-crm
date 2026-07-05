@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Alert from "@mui/material/Alert";
+import Autocomplete from "@mui/material/Autocomplete";
 import Button from "@mui/material/Button";
 import FormHelperText from "@mui/material/FormHelperText";
 import MenuItem from "@mui/material/MenuItem";
@@ -18,6 +19,7 @@ import { PlusIcon } from "@/components/plus-icon";
 import {
   PROPERTY_STATUSES,
   PROPERTY_TYPES,
+  US_STATES,
   type FormState,
 } from "@/lib/validation";
 
@@ -92,6 +94,16 @@ export function PropertyForm({
       : [{ key: 0, id: null, label: "" }],
   );
   const nextUnitKey = useRef(units && units.length > 0 ? units.length : 1);
+
+  // State is picked from an autocomplete, so it's controlled and submitted via a
+  // hidden `state` input carrying the two-letter code. The form remounts (via
+  // `formKey`) on a failed submit, re-running this initializer with the echoed
+  // `state.values`, so the selection survives an error the same way the native
+  // fields do.
+  const [stateCode, setStateCode] = useState<string>(
+    () => values.state ?? property?.state ?? "",
+  );
+  const selectedState = US_STATES.find((s) => s.code === stateCode) ?? null;
 
   function handleUnitLabelChange(key: number, label: string) {
     setUnitRows((prev) =>
@@ -218,24 +230,35 @@ export function PropertyForm({
               fullWidth
               sx={{ flex: 3 }}
             />
-            <TextField
-              id="state"
-              name="state"
-              label="State"
-              defaultValue={values.state ?? property?.state ?? ""}
-              placeholder="CA"
-              error={!!errors.state}
-              helperText={errors.state?.[0]}
+            <Autocomplete
+              options={US_STATES}
+              value={selectedState}
+              onChange={(_, option) => setStateCode(option?.code ?? "")}
+              getOptionLabel={(s) => s.code}
+              isOptionEqualToValue={(a, b) => a.code === b.code}
               fullWidth
               sx={{ flex: 1 }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="State"
+                  error={!!errors.state}
+                  helperText={errors.state?.[0]}
+                />
+              )}
             />
+            <input type="hidden" name="state" value={stateCode} />
             <TextField
               id="zip"
               name="zip"
               label="ZIP"
               defaultValue={values.zip ?? property?.zip ?? ""}
+              placeholder="94103"
               error={!!errors.zip}
               helperText={errors.zip?.[0]}
+              slotProps={{
+                htmlInput: { inputMode: "numeric", maxLength: 5 },
+              }}
               fullWidth
               sx={{ flex: 2 }}
             />
