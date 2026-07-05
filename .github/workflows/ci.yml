@@ -55,3 +55,31 @@ jobs:
         run: npm run db:migrate
       - name: Run Playwright tests
         run: npm run test:e2e
+
+  # Apply pending migrations to the production database. Runs only after the
+  # lint/unit and e2e gates pass, and only on a push to main (not on PRs or
+  # forks), so a schema change can never reach prod without its migration
+  # having gone first. Guards against the drift that took the app down: code
+  # shipping a new enum value while the live DB still had the old enum.
+  migrate-production:
+    name: Migrate production database
+    needs: [unit, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Bind to a GitHub Environment so the secret (and optionally required
+    # reviewers) live in one place: Settings > Environments > production.
+    environment: production
+    env:
+      # Set this secret to a migration-capable connection string — the Supabase
+      # session pooler or direct connection (port 5432), NOT the transaction
+      # pooler (6543), which can choke on DDL.
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations to production
+        run: npm run db:migrate
