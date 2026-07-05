@@ -55,11 +55,32 @@ Open http://localhost:3000.
 | --------------------- | --------------------------------------- |
 | `npm run dev`         | Start the dev server                    |
 | `npm run build`       | Production build                        |
+| `npm test`            | Run the Vitest unit suite               |
+| `npm run test:watch`  | Vitest in watch mode                    |
+| `npm run test:e2e`    | Run the Playwright end-to-end suite     |
 | `npm run db:generate` | Generate a migration from `schema.ts`   |
 | `npm run db:migrate`  | Apply pending migrations                |
 | `npm run db:push`     | Push schema directly (prototyping)      |
 | `npm run db:studio`   | Open Drizzle Studio                     |
 | `npm run db:seed`     | Reset + load sample properties          |
+
+## Testing
+
+Two layers, both runnable from a clean checkout after `npm install`:
+
+- **Unit tests — [Vitest](https://vitest.dev).** Cover the pure logic in
+  `src/lib` (lease-status derivation, table-param parsing, occupancy math,
+  formatting, and the Zod validation schemas). Tests are colocated as
+  `src/**/*.test.ts` and need no database. Run with `npm test`.
+- **End-to-end tests — [Playwright](https://playwright.dev).** Live in `e2e/`
+  and drive the real app in Chromium. The config boots `npm run dev` for you, so
+  they need a running Postgres (the same `DATABASE_URL` as dev) — each visitor
+  gets an anonymous session with demo data seeded automatically, so there's no
+  login or fixture setup. First run: `npx playwright install chromium`. Then
+  `npm run test:e2e`.
+
+There's no CI wired up yet; both suites are meant to be run locally (or added to
+a workflow later).
 
 ## Deploying with Supabase
 
