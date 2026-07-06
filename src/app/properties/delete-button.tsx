@@ -7,6 +7,7 @@ import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { successButtonSx } from "@/components/success-button-sx";
+import { actionButtonLabel } from "@/components/action-button-label";
 import { deleteProperty } from "./actions";
 
 export function DeleteButton({
@@ -68,7 +69,11 @@ export function DeleteButton({
             disabled={deleted}
             sx={deleted ? successButtonSx : undefined}
           >
-            {deleted ? "Deleted" : pending ? "Deleting…" : "Delete"}
+            {actionButtonLabel(deleted, pending, {
+              done: "Deleted",
+              pending: "Deleting…",
+              idle: "Delete",
+            })}
           </Button>
         )}
       />

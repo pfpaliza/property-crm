@@ -7,6 +7,9 @@ import { leases, leaseTenants, units, type NewLease } from "@/db/schema";
 import { leaseSchema, type FormState } from "@/lib/validation";
 import { deriveLeaseStatus } from "@/lib/lease-status";
 
+// Map validated form input to a lease row, coercing optional numbers to
+// strings and absent values to null for the DB columns. unitId is set by the
+// caller since it isn't validated the same way.
 function toRow(
   input: ReturnType<typeof leaseSchema.parse>,
 ): Omit<NewLease, "unitId"> {
@@ -19,6 +22,10 @@ function toRow(
   };
 }
 
+// Extract the lease fields from form data and validate them against the schema,
+// returning both the raw values (to repopulate the form on error) and the parse
+// result.
+//
 // FormData collapses repeated keys via Object.fromEntries, which loses all
 // but the last checked tenant — pull tenantIds out with getAll instead.
 function validate(formData: FormData) {
@@ -34,6 +41,9 @@ function validate(formData: FormData) {
   return { raw, parsed: leaseSchema.safeParse(raw) };
 }
 
+// Create a lease on a unit of the given property and link its tenants. Returns
+// a FormState carrying field errors on validation failure or a generic message
+// if the insert fails.
 export async function createLease(
   propertyId: string,
   _prevState: FormState,
@@ -88,6 +98,8 @@ export async function createLease(
   return { ok: true };
 }
 
+// End an active lease by capping its end date at today. Returns an error if the
+// lease no longer exists, isn't active, or the update fails.
 export async function endLease(
   id: string,
   propertyId: string,

@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { successButtonSx } from "@/components/success-button-sx";
+import { actionButtonLabel } from "@/components/action-button-label";
 import { endLease } from "./lease-actions";
 
 export function EndLeaseButton({
@@ -44,7 +45,11 @@ export function EndLeaseButton({
             disabled={ended}
             sx={ended ? successButtonSx : undefined}
           >
-            {ended ? "Ended" : pending ? "Ending…" : "End lease"}
+            {actionButtonLabel(ended, pending, {
+              done: "Ended",
+              pending: "Ending…",
+              idle: "End lease",
+            })}
           </Button>
         )}
       />
