@@ -167,6 +167,23 @@ export async function updateProperty(
 
   const sessionId = await getSessionId();
 
+  // Confirm the property belongs to this session before touching anything. The
+  // property update below is already session-scoped (a no-op if unowned), but
+  // the unit reconciliation keys only on propertyId, so without this guard a
+  // forged id could mutate another session's units.
+  const owned = await db
+    .select({ id: properties.id })
+    .from(properties)
+    .where(and(eq(properties.id, id), eq(properties.sessionId, sessionId)))
+    .limit(1);
+  if (owned.length === 0) {
+    return {
+      ok: false,
+      message: "Something went wrong saving this property. Please try again.",
+      values: raw,
+    };
+  }
+
   // Reconcile the submitted units against what's on record: rows with a known
   // id are renamed, new rows are inserted, and units no longer present are
   // removed — unless a removed unit still has leases, which we refuse.

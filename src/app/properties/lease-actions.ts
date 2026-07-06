@@ -1,9 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { leases, leaseTenants, units, type NewLease } from "@/db/schema";
+import { getSessionId } from "@/lib/session";
+import {
+  leases,
+  leaseTenants,
+  properties,
+  tenants,
+  units,
+  type NewLease,
+} from "@/db/schema";
 import { leaseSchema, type FormState } from "@/lib/validation";
 import { deriveLeaseStatus } from "@/lib/lease-status";
 
@@ -59,18 +67,48 @@ export async function createLease(
     };
   }
 
-  // Guard that the chosen unit actually belongs to this property, so a lease
-  // can't be pinned to a unit from someone else's property via a forged id.
+  const sessionId = await getSessionId();
+
+  // Guard that the chosen unit belongs to a property owned by this session, so a
+  // lease can't be pinned to a unit from someone else's property via a forged
+  // propertyId or unitId. The join to properties ties both to the session.
   const unit = await db
     .select({ id: units.id })
     .from(units)
-    .where(and(eq(units.id, parsed.data.unitId), eq(units.propertyId, propertyId)))
+    .innerJoin(properties, eq(units.propertyId, properties.id))
+    .where(
+      and(
+        eq(units.id, parsed.data.unitId),
+        eq(units.propertyId, propertyId),
+        eq(properties.sessionId, sessionId),
+      ),
+    )
     .limit(1);
   if (unit.length === 0) {
     return {
       ok: false,
       message: "Please fix the errors below.",
       fieldErrors: { unitId: ["Select a unit on this property"] },
+      values: raw,
+    };
+  }
+
+  // Every tenant on the lease must belong to this session too, so forged tenant
+  // ids can't attach someone else's tenants (or dangling ids) to the lease.
+  const ownedTenants = await db
+    .select({ id: tenants.id })
+    .from(tenants)
+    .where(
+      and(
+        inArray(tenants.id, parsed.data.tenantIds),
+        eq(tenants.sessionId, sessionId),
+      ),
+    );
+  if (ownedTenants.length !== parsed.data.tenantIds.length) {
+    return {
+      ok: false,
+      message: "Please fix the errors below.",
+      fieldErrors: { tenantIds: ["Select tenants from your list"] },
       values: raw,
     };
   }
@@ -104,13 +142,19 @@ export async function endLease(
   id: string,
   propertyId: string,
 ): Promise<{ success: boolean; message: string }> {
+  const sessionId = await getSessionId();
+
   // Only an active lease can be ended: an upcoming lease hasn't started, and
   // ending it would leave its end date before its start date. The button is
-  // hidden in those cases, but guard here too since it only passes an id.
+  // hidden in those cases, but guard here too since it only passes an id. The
+  // join to properties also scopes the lookup to this session, so a forged id
+  // can't end another session's lease.
   const [lease] = await db
     .select({ startDate: leases.startDate, endDate: leases.endDate })
     .from(leases)
-    .where(eq(leases.id, id))
+    .innerJoin(units, eq(leases.unitId, units.id))
+    .innerJoin(properties, eq(units.propertyId, properties.id))
+    .where(and(eq(leases.id, id), eq(properties.sessionId, sessionId)))
     .limit(1);
   if (!lease) {
     return { success: false, message: "This lease no longer exists." };
